@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Register — AI Playground{% endblock %}
+
+{% block content %}
+<div class="auth-form">
+    <h1>Create an Account</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% if next_url %}
+            <input type="hidden" name="next" value="{{ next_url }}" />
+        {% endif %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary btn-full">Register</button>
+    </form>
+    <p class="auth-alt">Already have an account? <a href="{% url 'login' %}{% if next_url %}?next={{ next_url|urlencode }}{% endif %}">Login here</a>.</p>
+</div>
+{% endblock %}

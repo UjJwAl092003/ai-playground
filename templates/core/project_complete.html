@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ project.title }} — Complete — AI Playground{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🎉 {{ project.title }}</h1>
+    <p class="subtitle">Project completed! Here's the full walkthrough.</p>
+</div>
+
+{% if project.description %}
+    <div class="project-section">
+        <h2>📖 Description</h2>
+        <div class="project-content project-markdown" data-markdown="{{ project.description }}"></div>
+    </div>
+{% endif %}
+
+{% if project.complete_code %}
+    <div class="project-section">
+        <h2>🐍 Complete Code</h2>
+        <div class="project-content project-markdown project-code" data-markdown="{{ project.complete_code }}"></div>
+    </div>
+{% endif %}
+
+{% if project.output %}
+    <div class="project-section">
+        <h2>📤 Output</h2>
+        <div class="project-content project-markdown project-output" data-markdown="{{ project.output }}"></div>
+    </div>
+{% endif %}
+
+{% if project.explanation %}
+    <div class="project-section">
+        <h2>💡 Step-by-Step Explanation</h2>
+        <div class="project-content project-markdown" data-markdown="{{ project.explanation }}"></div>
+    </div>
+{% endif %}
+
+{% if project.learning_outcomes %}
+    <div class="project-section">
+        <h2>🎯 Learning Outcomes</h2>
+        <div class="project-content project-markdown" data-markdown="{{ project.learning_outcomes }}"></div>
+    </div>
+{% endif %}
+
+{% if project.dataset_info %}
+    <div class="project-section">
+        <h2>📊 Dataset Information</h2>
+        <div class="project-content project-markdown" data-markdown="{{ project.dataset_info }}"></div>
+    </div>
+{% endif %}
+
+<div class="action-area">
+    <a href="{% url 'project_learn' project.slug %}" class="btn btn-primary">Review MCQs Again</a>
+    <a href="{% url 'projects_list' %}" class="btn btn-secondary">Back to Projects</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/markdown.js' %}"></script>
+<script src="{% static 'js/project_markdown.js' %}"></script>
+{% endblock %}

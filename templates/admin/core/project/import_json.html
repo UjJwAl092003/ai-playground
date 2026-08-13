@@ -1,0 +1,117 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Import Project from JSON | Django site admin{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  <style>
+    .import-box {
+      max-width: 860px;
+      margin: 20px 0;
+    }
+    .import-box .module {
+      padding: 16px 20px;
+    }
+    .import-box .field-box {
+      margin: 14px 0;
+    }
+    .import-box label {
+      font-weight: 600;
+    }
+    .import-box .help {
+      margin-top: 4px;
+      color: #666;
+      font-size: 12px;
+    }
+    .submit-row input[type="submit"] {
+      background: #417690;
+      color: #fff;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .submit-row input[type="submit"]:hover {
+      background: #205067;
+    }
+  </style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='core' %}">Core</a>
+    &rsaquo; <a href="{% url 'admin:core_project_changelist' %}">Projects</a>
+&rsaquo; {% translate "Import Project from JSON" %}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="import-box">
+    <div class="module">
+<h2>Import a complete Project from a JSON file</h2>
+      <p>
+        This JSON file is the <strong>single source of truth</strong> for the
+        project. It contains the project information <em>and</em> its MCQs.
+        The process is: upload → validate → preview → confirm.
+      </p>
+      <p>
+        The Project is <strong>created automatically</strong> if it does not
+        already exist. If a Project with the same <strong>slug</strong> already
+        exists, it is <strong>not</strong> overwritten — you will only be able
+        to add new questions to it. Existing questions are never overwritten.
+      </p>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="field-box">
+          <label for="id_json_file">JSON file (max 2 MB):</label>
+          <input type="file" name="json_file" id="id_json_file" accept=".json,application/json" required>
+          <div class="help">
+            Top-level fields: <code>title</code>, <code>slug</code>,
+            <code>short_description</code>, <code>description</code>,
+            <code>overview</code>, <code>complete_code</code>,
+            <code>output</code>, <code>explanation</code>,
+            <code>learning_outcomes</code>, <code>dataset_info</code>,
+            and <code>questions[]</code>.
+            <br>
+            Each question has: <code>question_number</code>,
+            <code>question_text</code>, <code>option_a</code>–<code>option_d</code>,
+            <code>correct_answer</code>, <code>explanation</code>,
+            <code>python_code</code> (optional), <code>practical_example</code> (optional).
+            <br>
+Markdown and fenced <code>```python</code> code blocks are preserved
+            as-is.
+          </div>
+        </div>
+
+        <div class="field-box">
+          <label>
+            <input type="checkbox" name="auto_number" id="id_auto_number">
+            Automatically number the questions
+          </label>
+          <div class="help">
+            When checked, any <code>question_number</code> values in the file are
+            ignored and fresh sequential numbers are assigned starting after the
+            highest existing number for this project.
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <input type="submit" value="Validate &amp; Preview">
+        </div>
+      </form>
+    </div>
+
+    <p style="margin-top: 18px; font-size: 12px; color: #666;">
+      Security: the imported <code>python_code</code> is stored as plain text and
+      is never executed. Only staff users with permission to add questions can use
+      this importer.
+    </p>
+  </div>
+{% endblock %}

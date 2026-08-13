@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ lesson.topic }} — Coding Exercises — AI Playground{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ lesson.module }} — Coding Exercises</h1>
+    <p class="subtitle">{{ lesson.topic }}</p>
+</div>
+
+{% if lesson.subject %}
+    <p class="lesson-subject-link">
+        <a href="{% url 'subject_detail' lesson.subject.slug %}">← Back to {{ lesson.subject.name }}</a>
+    </p>
+{% endif %}
+
+{% if user.is_authenticated %}
+    <div class="progress-summary">
+        <h3>Your Coding Progress</h3>
+        <div class="stats-row">
+            <div class="stat-box">
+                <span class="stat-number">{{ completed_count }}</span>
+                <span class="stat-label">Completed</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">{{ exercises|length }}</span>
+                <span class="stat-label">Total Exercises</span>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% if exercises %}
+    <div class="coding-exercise-list">
+        {% for ex in exercises %}
+            <div class="coding-exercise-card {% if ex.is_done %}is-done{% endif %}">
+                <div class="exercise-card-header">
+                    <span class="exercise-number">Exercise {{ ex.exercise_number }}</span>
+                    {% if ex.is_done %}
+                        <span class="badge badge-complete">✅ Completed</span>
+                    {% endif %}
+                </div>
+                <h2>{{ ex.title }}</h2>
+<div class="exercise-meta">
+                    {% if ex.difficulty %}
+                        <span class="difficulty-badge diff-{{ ex.difficulty|lower }}">{{ ex.difficulty }}</span>
+                    {% endif %}
+                    <span class="exercise-time">⏱ ~{{ ex.estimated_time }} min</span>
+                </div>
+                <a href="{% url 'coding_exercise_detail' lesson.lesson_slug ex.exercise_number %}"
+                   class="btn btn-primary">Start Exercise</a>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="action-area">
+        {% if user.is_authenticated %}
+            {% if all_completed %}
+                <p class="completion-badge">🎉 All coding exercises completed!</p>
+            {% else %}
+                <a href="{% url 'coding_exercise_detail' lesson.lesson_slug continue_exercise.exercise_number %}"
+                   class="btn btn-primary btn-lg">Continue (Exercise {{ continue_exercise.exercise_number }})</a>
+            {% endif %}
+        {% else %}
+            <p class="login-prompt">Log in to track your coding progress!</p>
+            <a href="{% url 'coding_exercise_detail' lesson.lesson_slug exercises.0.exercise_number %}"
+               class="btn btn-primary btn-lg">Start Learning</a>
+        {% endif %}
+    </div>
+{% else %}
+    <p class="empty-state">No coding exercises have been added to this lesson yet.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Mistakes — AI Playground{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Review Your Mistakes</h1>
+    <p class="subtitle">These are questions you previously answered incorrectly. Try them again and strengthen your understanding.</p>
+</div>
+
+{% if is_subject_review %}
+    <div class="review-subject-filter">
+        <p>
+            Showing mistakes for <strong>{{ active_subject.name }}</strong>.
+            <a href="{% url 'review_mistakes' %}">View all subjects</a>
+        </p>
+    </div>
+{% endif %}
+
+{% if mistake_count == 0 %}
+    <div class="empty-state review-empty">
+        <p>🎉 You have no mistakes to review. Great job!</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+{% else %}
+    <div class="review-summary">
+        <p><strong>{{ mistake_count }}</strong> question{{ mistake_count|pluralize }} to review.</p>
+    </div>
+
+    <div class="action-area review-actions">
+        <a href="{% url 'review_learn' %}" class="btn btn-primary btn-lg">Review All Mistakes</a>
+        {% if is_subject_review %}
+            <a href="{% url 'review_learn_subject' active_subject.slug %}" class="btn btn-secondary btn-lg">Review {{ active_subject.name }} Mistakes</a>
+        {% endif %}
+    </div>
+
+{% for group in content_groups %}
+        <div class="review-group">
+            <div class="review-group-header">
+                <h2>{{ group.title }}</h2>
+                {% if group.kind == 'project' %}
+                    <span class="badge badge-project">📦 Project</span>
+                {% endif %}
+                <span class="badge badge-warning">{{ group.count }} mistake{{ group.count|pluralize }}</span>
+            </div>
+            <ul class="review-question-list">
+                {% for q in group.questions %}
+                    <li>
+                        {% if group.kind == 'project' %}
+                            <a href="{% url 'review_learn_project' q.slug %}#q{{ q.question_number }}" class="review-question-link">
+                        {% else %}
+                            <a href="{% url 'review_learn_subject' q.slug %}#q{{ q.question_number }}" class="review-question-link">
+                        {% endif %}
+                            <span class="review-q-number">Question {{ q.question_number }}</span>
+                            <span class="review-q-text">— {{ q.question_text|truncatechars:80 }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+
+    <div class="action-area">
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+{% endif %}
+{% endblock %}
+

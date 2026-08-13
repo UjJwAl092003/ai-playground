@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Import Complete | Django site admin{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .result-box { max-width: 720px; margin: 20px 0; }
+    .result-box .module { padding: 20px 24px; }
+    .result-box h2 { color: #28a745; margin-top: 0; }
+    .summary-line { font-size: 14px; margin: 8px 0; }
+    .summary-line strong { display: inline-block; min-width: 180px; }
+    .actions { margin-top: 20px; }
+    .actions a.button {
+      display: inline-block; background: #417690; color: #fff;
+      padding: 10px 16px; border-radius: 4px; text-decoration: none;
+      margin-right: 8px;
+    }
+  </style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='core' %}">Core</a>
+    &rsaquo; <a href="{% url 'admin:core_question_changelist' %}">Questions</a>
+    &rsaquo; {% translate "Import Complete" %}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="result-box">
+    <div class="module">
+      <h2>✅ Successfully imported {{ result.imported_count }} question(s) into {{ result.subject_name }}</h2>
+
+      <p class="summary-line"><strong>Subject:</strong> {{ result.subject_name }}</p>
+<p class="summary-line"><strong>Number imported:</strong> {{ result.imported_count }}</p>
+      <p class="summary-line"><strong>Numbering mode:</strong>
+        {% if result.auto_number %}Auto-numbered{% else %}As provided in file{% endif %}
+      </p>
+      <p class="summary-line"><strong>Question number range:</strong>
+        {{ result.min_number }} – {{ result.max_number }}
+      </p>
+      <p class="summary-line"><strong>Total questions now available for this subject:</strong>
+        {{ result.total_for_subject }}
+      </p>
+      {% if result.skipped_conflicts %}
+        <p class="summary-line">
+          <strong>Skipped (already existed):</strong> {{ result.skipped_conflicts }}
+        </p>
+      {% endif %}
+
+      <p class="summary-line" style="margin-top: 14px; color:#666;">
+        The new questions are immediately available on the learning website.
+      </p>
+
+      <div class="actions">
+        <a class="button" href="{{ changelist_url }}">View all questions</a>
+        <a class="button" href="{% url 'admin:core_question_import_json' %}">Import another file</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

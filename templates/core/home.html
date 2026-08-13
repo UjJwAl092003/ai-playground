@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Home — AI Playground{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Welcome to AI Playground</h1>
+    <p class="subtitle">Practice. Code. Build. Master AI.</p>
+    <p class="platform-description">Interactive coding exercises, MCQs, projects, and hands-on learning for Machine Learning, Deep Learning, and AI.</p>
+</div>
+
+<div class="subject-grid">
+    {% for subject in subjects %}
+        <div class="subject-card">
+            <div class="card-body">
+                <h2>{{ subject.name }}</h2>
+                <p class="question-count">{{ subject.questions.count }} question{{ subject.questions.count|pluralize }}</p>
+                <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-primary">
+                    {% if user.is_authenticated %}
+                        View Subject
+                    {% else %}
+                        Start Learning
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+{% empty %}
+        <div class="empty-state">
+            <p>No subjects are available yet. Please check back later.</p>
+        </div>
+    {% endfor %}
+</div>
+
+<div class="projects-section">
+    <div class="section-header">
+        <h2>Hands-on Projects</h2>
+        <a href="{% url 'projects_list' %}" class="btn btn-secondary">View All Projects</a>
+    </div>
+    <p class="subtitle">Learn by building real Python &amp; Machine Learning projects</p>
+    {% if projects %}
+        <div class="subject-grid">
+            {% for project in projects %}
+                <div class="subject-card project-card">
+                    <div class="card-body">
+                        <h2>{{ project.title }}</h2>
+                        {% if project.short_description %}
+                            <p class="project-description">{{ project.short_description }}</p>
+                        {% endif %}
+                        <p class="question-count">{{ project.questions.count }} question{{ project.questions.count|pluralize }}</p>
+                        <a href="{% url 'project_detail' project.slug %}" class="btn btn-primary">
+                            {% if user.is_authenticated %}
+                                View Project
+                            {% else %}
+                                Start Project
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No projects are available yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

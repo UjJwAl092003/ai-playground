@@ -1,0 +1,253 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Preview Coding Lesson Import | Django site admin{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  <style>
+    .preview-box { max-width: 960px; margin: 20px 0; }
+    .preview-box .module { padding: 16px 20px; margin-bottom: 16px; }
+    .error-list { color: #ba2121; }
+    .error-list ul { margin: 6px 0 0 18px; }
+    .preview-box table { width: 100%; border-collapse: collapse; }
+    .preview-box table th, .preview-box table td {
+      text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee;
+      vertical-align: top;
+    }
+    .preview-box pre {
+      background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 4px;
+      padding: 10px; max-height: 240px; overflow: auto; white-space: pre-wrap;
+    }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; color: #fff;
+    }
+    .badge-success { background: #28a745; }
+    .badge-conflict { background: #ffc107; }
+    .badge-info { background: #17a2b8; }
+    .summary-line { font-size: 14px; margin: 4px 0; }
+    .conflict-banner {
+      border: 1px solid #ffc107; background: #fff8e1; padding: 12px 16px;
+      border-radius: 4px; margin: 10px 0;
+    }
+    .conflict-banner h3 { color: #8a6d1a; margin: 0 0 6px; }
+    .submit-row input[type="submit"] {
+      background: #28a745; color: #fff; padding: 10px 18px;
+      border: none; border-radius: 4px; cursor: pointer; font-weight: 600;
+    }
+    .submit-row input[type="submit"]:hover { background: #1e7e34; }
+    .cancel-link { margin-left: 14px; }
+    .lesson-field { margin: 6px 0; }
+    .lesson-field strong { display: inline-block; min-width: 180px; }
+  </style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='core' %}">Core</a>
+    &rsaquo; <a href="{% url 'admin:core_codinglesson_changelist' %}">Coding Lessons</a>
+    &rsaquo; {% translate "Import Coding Exercises from JSON" %}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="preview-box">
+
+    {# ---------------- Validation errors (blocking) ---------------- #}
+    {% if errors %}
+      <div class="module error-list">
+        <h2>❌ Validation failed — nothing was imported</h2>
+        <p>
+          The file <strong>{{ filename }}</strong> has errors. Please fix them
+          and upload again. No lesson or exercises were created.
+        </p>
+        <ul>
+          {% for error in errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+        <p style="margin-top: 12px;">
+          <a href="{% url 'admin:core_codinglesson_import_json' %}" class="button">
+            &larr; Upload a different file
+          </a>
+        </p>
+      </div>
+    {% else %}
+      {# ---------------- Success / summary ---------------- #}
+      <div class="module">
+        <h2>✅ File validated successfully</h2>
+        <p class="summary-line"><strong>File:</strong> {{ filename }}</p>
+        <p class="summary-line">
+          <strong>Lesson:</strong> {{ lesson_name }}
+          {% if lesson_exists %}
+            <span class="badge badge-conflict">Already exists in database</span>
+          {% else %}
+            <span class="badge badge-success">Will be created</span>
+          {% endif %}
+        </p>
+        <p class="summary-line">
+          <strong>Module:</strong> {{ lesson_data.module }}
+        </p>
+        <p class="summary-line">
+          <strong>Lesson slug:</strong> {{ lesson_data.lesson_slug }}
+        </p>
+        <p class="summary-line">
+          <strong>Exercises to import:</strong> {{ exercises|length }}
+          {% if conflicts %}
+            <span class="badge badge-conflict" title="Already exist in the database, will be skipped">
+              {{ conflicts|length }} conflict(s) will be skipped
+            </span>
+          {% endif %}
+        </p>
+        <p class="summary-line">
+          <strong>Numbering mode:</strong>
+          {% if auto_number %}
+            <span class="badge badge-info">Auto-numbered (file numbers ignored)</span>
+          {% else %}
+            <span class="badge badge-success">As provided in file</span>
+          {% endif %}
+        </p>
+        {% if duplicate_numbers %}
+          <p class="summary-line">
+            <strong style="color:#ba2121;">Duplicate exercise numbers in file:</strong>
+            {{ duplicate_numbers|join:", " }}
+          </p>
+        {% endif %}
+      </div>
+
+      {# ---------------- Lesson conflict banner ---------------- #}
+      {% if lesson_exists %}
+        <div class="module conflict-banner">
+          <h3>⚠️ A lesson with this slug already exists</h3>
+          <p>
+            The lesson <strong>“{{ lesson_name }}”</strong> (slug
+            <code>{{ lesson_data.lesson_slug }}</code>) already exists in the
+            database. To avoid creating a duplicate or silently overwriting
+            existing data, the existing lesson information will be
+            <strong>kept unchanged</strong>.
+          </p>
+          <p>
+            Only <strong>{{ exercises|length }} new exercise(s)</strong> will
+            be added to the existing lesson. Existing exercises will
+            <strong>not</strong> be modified or deleted.
+          </p>
+        </div>
+      {% endif %}
+
+      {# ---------------- Lesson fields preview ---------------- #}
+      <div class="module">
+        <h2>Lesson information</h2>
+        <div class="lesson-field">
+          <strong>Module:</strong> {{ lesson_data.module }}
+        </div>
+        <div class="lesson-field">
+          <strong>Topic:</strong> {{ lesson_data.topic }}
+        </div>
+        <div class="lesson-field">
+          <strong>Lesson slug:</strong> {{ lesson_data.lesson_slug }}
+        </div>
+      </div>
+
+      {# ---------------- Preview of exercises ---------------- #}
+      <div class="module">
+        <h2>Preview of new exercises ({{ exercises|length }} shown)</h2>
+        {% if exercises %}
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Problem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in exercises %}
+                <tr>
+                  <td>{{ e.exercise_number }}</td>
+                  <td>{{ e.title }}</td>
+                  <td>{{ e.problem_statement|truncatewords:30 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>
+            {% if conflicts %}
+              All exercises in this file already exist in the database.
+            {% else %}
+              No exercises to import.
+            {% endif %}
+          </p>
+        {% endif %}
+      </div>
+
+      {# ---------------- Conflicts (already exist, never overwritten) ---------------- #}
+      {% if conflicts %}
+        <div class="module">
+          <h2>⚠️ Skipped — already exist in the database (not overwritten)</h2>
+          <table>
+            <thead>
+              <tr><th>#</th><th>Title</th><th>Reason</th></tr>
+            </thead>
+            <tbody>
+              {% for e in conflicts %}
+                <tr>
+                  <td>{{ e.exercise_number }}</td>
+                  <td>{{ e.title }}</td>
+                  <td>
+                    <span class="badge badge-conflict">
+                      Ex{{ e.exercise_number }} already exists in {{ lesson_name }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+
+      {# ---------------- Confirmation ---------------- #}
+      {% if exercises %}
+        <div class="module">
+          <h2>Confirm import</h2>
+          {% if lesson_exists %}
+            <p>
+              This will add <strong>{{ exercises|length }}</strong> new
+              exercise(s) to the existing lesson
+              <strong>{{ lesson_name }}</strong>. The existing lesson
+              information will be kept unchanged, and existing exercises will
+              <strong>not</strong> be modified or deleted.
+            </p>
+          {% else %}
+            <p>
+              This will create a new lesson
+              <strong>{{ lesson_name }}</strong> (slug
+              <code>{{ lesson_data.lesson_slug }}</code>) and add
+              <strong>{{ exercises|length }}</strong> exercise(s) to it.
+            </p>
+          {% endif %}
+          <form method="post" action="{% url 'admin:core_codinglesson_import_json_confirm' %}">
+            {% csrf_token %}
+            <div class="submit-row">
+              <input type="submit" value="Import {{ exercises|length }} exercise(s)">
+              <a href="{% url 'admin:core_codinglesson_import_json' %}" class="cancel-link button">
+                Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      {% else %}
+        <p>
+          <a href="{% url 'admin:core_codinglesson_import_json' %}" class="button">
+            &larr; Upload a different file
+          </a>
+        </p>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endblock %}

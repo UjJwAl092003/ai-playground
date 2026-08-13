@@ -1,0 +1,100 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Import Questions from JSON | Django site admin{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  <style>
+    .import-box {
+      max-width: 860px;
+      margin: 20px 0;
+    }
+    .import-box .module {
+      padding: 16px 20px;
+    }
+    .import-box .field-box {
+      margin: 14px 0;
+    }
+    .import-box label {
+      font-weight: 600;
+    }
+    .import-box .help {
+      margin-top: 4px;
+      color: #666;
+      font-size: 12px;
+    }
+    .submit-row input[type="submit"] {
+      background: #417690;
+      color: #fff;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .submit-row input[type="submit"]:hover {
+      background: #205067;
+    }
+  </style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='core' %}">Core</a>
+    &rsaquo; <a href="{% url 'admin:core_question_changelist' %}">Questions</a>
+    &rsaquo; {% translate "Import Questions from JSON" %}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="import-box">
+    <div class="module">
+      <h2>Import Questions from a JSON file</h2>
+      <p>
+        Upload a <strong>.json</strong> file containing MCQs. The file will be
+        validated, you will see a <strong>preview</strong>, and questions are
+        created only after you confirm.
+      </p>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+<div class="field-box">
+          <label for="id_json_file">JSON file (max 2 MB):</label>
+          <input type="file" name="json_file" id="id_json_file" accept=".json,application/json" required>
+          <div class="help">
+            The file must look like:
+            <code>{ "subject": "Pandas", "questions": [ { "question_number": 1, ... } ] }</code>
+          </div>
+        </div>
+
+        <div class="field-box">
+          <label>
+            <input type="checkbox" name="auto_number" id="id_auto_number">
+            Automatically number the questions
+          </label>
+          <div class="help">
+            When checked, any <code>question_number</code> values in the file are
+            ignored and fresh sequential numbers are assigned starting after the
+            highest existing number for this subject.
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <input type="submit" value="Validate &amp; Preview">
+        </div>
+      </form>
+    </div>
+
+    <p style="margin-top: 18px; font-size: 12px; color: #666;">
+      Security: the imported <code>python_code</code> is stored as plain text and
+      is never executed. Only staff users with permission to add questions can use
+      this importer.
+    </p>
+  </div>
+{% endblock %}
+

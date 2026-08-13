@@ -1,0 +1,300 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Preview Project Import | Django site admin{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  <style>
+    .preview-box { max-width: 960px; margin: 20px 0; }
+    .preview-box .module { padding: 16px 20px; margin-bottom: 16px; }
+    .error-list { color: #ba2121; }
+    .error-list ul { margin: 6px 0 0 18px; }
+    .preview-box table { width: 100%; border-collapse: collapse; }
+    .preview-box table th, .preview-box table td {
+      text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee;
+      vertical-align: top;
+    }
+    .preview-box pre {
+      background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 4px;
+      padding: 10px; max-height: 240px; overflow: auto; white-space: pre-wrap;
+    }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; color: #fff;
+    }
+    .badge-success { background: #28a745; }
+    .badge-conflict { background: #ffc107; }
+    .badge-error { background: #dc3545; }
+    .badge-info { background: #17a2b8; }
+    .summary-line { font-size: 14px; margin: 4px 0; }
+    .conflict-banner {
+      border: 1px solid #ffc107; background: #fff8e1; padding: 12px 16px;
+      border-radius: 4px; margin: 10px 0;
+    }
+    .conflict-banner h3 { color: #8a6d1a; margin: 0 0 6px; }
+    .submit-row input[type="submit"] {
+      background: #28a745; color: #fff; padding: 10px 18px;
+      border: none; border-radius: 4px; cursor: pointer; font-weight: 600;
+    }
+    .submit-row input[type="submit"]:hover { background: #1e7e34; }
+    .cancel-link { margin-left: 14px; }
+    .project-field { margin: 6px 0; }
+    .project-field strong { display: inline-block; min-width: 180px; }
+  </style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='core' %}">Core</a>
+    &rsaquo; <a href="{% url 'admin:core_project_changelist' %}">Projects</a>
+    &rsaquo; {% translate "Import Project from JSON" %}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="preview-box">
+
+    {# ---------------- Validation errors (blocking) ---------------- #}
+    {% if errors %}
+      <div class="module error-list">
+        <h2>❌ Validation failed — nothing was imported</h2>
+        <p>
+          The file <strong>{{ filename }}</strong> has errors. Please fix them
+          and upload again. No project or questions were created.
+        </p>
+        <ul>
+          {% for error in errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+        <p style="margin-top: 12px;">
+          <a href="{% url 'admin:core_project_import_json' %}" class="button">
+            &larr; Upload a different file
+          </a>
+        </p>
+      </div>
+    {% else %}
+      {# ---------------- Success / summary ---------------- #}
+      <div class="module">
+        <h2>✅ File validated successfully</h2>
+        <p class="summary-line"><strong>File:</strong> {{ filename }}</p>
+        <p class="summary-line">
+          <strong>Project:</strong> {{ project_name }}
+          {% if project_exists %}
+            <span class="badge badge-conflict">Already exists in database</span>
+          {% else %}
+            <span class="badge badge-success">Will be created</span>
+          {% endif %}
+        </p>
+        <p class="summary-line">
+          <strong>Slug:</strong> {{ project_data.slug }}
+        </p>
+<p class="summary-line">
+          <strong>Questions to import:</strong> {{ questions|length }}
+          {% if conflicts %}
+            <span class="badge badge-conflict" title="Already exist in the database, will be skipped">
+              {{ conflicts|length }} conflict(s) will be skipped
+            </span>
+          {% endif %}
+        </p>
+        <p class="summary-line">
+          <strong>Numbering mode:</strong>
+          {% if auto_number %}
+            <span class="badge badge-info">Auto-numbered (file numbers ignored)</span>
+          {% else %}
+            <span class="badge badge-success">As provided in file</span>
+          {% endif %}
+        </p>
+        {% if duplicate_numbers %}
+          <p class="summary-line">
+            <strong style="color:#ba2121;">Duplicate question numbers in file:</strong>
+            {{ duplicate_numbers|join:", " }}
+          </p>
+        {% endif %}
+      </div>
+
+      {# ---------------- Project conflict banner ---------------- #}
+      {% if project_exists %}
+        <div class="module conflict-banner">
+          <h3>⚠️ A project with this slug already exists</h3>
+          <p>
+            The project <strong>“{{ project_name }}”</strong> (slug
+            <code>{{ project_data.slug }}</code>) already exists in the
+            database. To avoid creating a duplicate or silently overwriting
+            existing data, the existing project information will be
+            <strong>kept unchanged</strong>.
+          </p>
+          <p>
+            Only <strong>{{ questions|length }} new question(s)</strong> will
+            be added to the existing project. Existing questions will
+            <strong>not</strong> be modified or deleted.
+          </p>
+        </div>
+      {% endif %}
+
+      {# ---------------- Project fields preview ---------------- #}
+      <div class="module">
+        <h2>Project information</h2>
+        <div class="project-field">
+          <strong>Title:</strong> {{ project_data.title }}
+        </div>
+        <div class="project-field">
+          <strong>Slug:</strong> {{ project_data.slug }}
+        </div>
+        <div class="project-field">
+          <strong>Short description:</strong> {{ project_data.short_description|default:"—" }}
+        </div>
+        {% if project_data.description %}
+          <div class="project-field">
+            <strong>Description:</strong>
+            <pre>{{ project_data.description }}</pre>
+          </div>
+        {% endif %}
+        {% if project_data.overview %}
+          <div class="project-field">
+            <strong>Overview:</strong>
+            <pre>{{ project_data.overview }}</pre>
+          </div>
+        {% endif %}
+        {% if project_data.complete_code %}
+          <div class="project-field">
+            <strong>Complete code:</strong>
+            <pre><code>{{ project_data.complete_code }}</code></pre>
+          </div>
+        {% endif %}
+        {% if project_data.output %}
+          <div class="project-field">
+            <strong>Output:</strong>
+            <pre>{{ project_data.output }}</pre>
+          </div>
+        {% endif %}
+        {% if project_data.explanation %}
+          <div class="project-field">
+            <strong>Explanation:</strong>
+            <pre>{{ project_data.explanation }}</pre>
+          </div>
+        {% endif %}
+        {% if project_data.learning_outcomes %}
+          <div class="project-field">
+            <strong>Learning outcomes:</strong>
+            <pre>{{ project_data.learning_outcomes }}</pre>
+          </div>
+        {% endif %}
+        {% if project_data.dataset_info %}
+          <div class="project-field">
+            <strong>Dataset info:</strong>
+            <pre>{{ project_data.dataset_info }}</pre>
+          </div>
+        {% endif %}
+      </div>
+
+      {# ---------------- Preview of questions ---------------- #}
+      <div class="module">
+        <h2>Preview of new questions ({{ questions|length }} shown)</h2>
+        {% if questions %}
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Question</th>
+                <th>Correct</th>
+                <th>Options</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for q in questions %}
+                <tr>
+                  <td>{{ q.question_number }}</td>
+                  <td>{{ q.question_text|truncatewords:30 }}</td>
+                  <td><span class="badge badge-success">{{ q.correct_answer }}</span></td>
+                  <td style="font-size: 12px;">
+                    <strong>A:</strong> {{ q.option_a|truncatechars:60 }}<br>
+                    <strong>B:</strong> {{ q.option_b|truncatechars:60 }}<br>
+                    <strong>C:</strong> {{ q.option_c|truncatechars:60 }}<br>
+                    <strong>D:</strong> {{ q.option_d|truncatechars:60 }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>
+            {% if conflicts %}
+              All questions in this file already exist in the database.
+            {% else %}
+              No questions to import.
+            {% endif %}
+          </p>
+        {% endif %}
+      </div>
+
+      {# ---------------- Conflicts (already exist, never overwritten) ---------------- #}
+      {% if conflicts %}
+        <div class="module">
+          <h2>⚠️ Skipped — already exist in the database (not overwritten)</h2>
+          <table>
+            <thead>
+              <tr><th>#</th><th>Question</th><th>Reason</th></tr>
+            </thead>
+            <tbody>
+              {% for q in conflicts %}
+                <tr>
+                  <td>{{ q.question_number }}</td>
+                  <td>{{ q.question_text|truncatewords:30 }}</td>
+                  <td>
+                    <span class="badge badge-conflict">
+                      Q{{ q.question_number }} already exists in {{ project_name }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+
+      {# ---------------- Confirmation ---------------- #}
+      {% if questions %}
+        <div class="module">
+          <h2>Confirm import</h2>
+          {% if project_exists %}
+            <p>
+              This will add <strong>{{ questions|length }}</strong> new
+              question(s) to the existing project
+              <strong>{{ project_name }}</strong>. The existing project
+              information will be kept unchanged, and existing questions will
+              <strong>not</strong> be modified or deleted.
+            </p>
+          {% else %}
+            <p>
+              This will create a new project
+              <strong>{{ project_name }}</strong> (slug
+              <code>{{ project_data.slug }}</code>) and add
+              <strong>{{ questions|length }}</strong> question(s) to it.
+            </p>
+          {% endif %}
+          <form method="post" action="{% url 'admin:core_project_import_json_confirm' %}">
+            {% csrf_token %}
+            <div class="submit-row">
+              <input type="submit" value="Import {{ questions|length }} question(s)">
+              <a href="{% url 'admin:core_project_import_json' %}" class="cancel-link button">
+                Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      {% else %}
+        <p>
+          <a href="{% url 'admin:core_project_import_json' %}" class="button">
+            &larr; Upload a different file
+          </a>
+        </p>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endblock %}

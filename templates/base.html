@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{% block title %}AI Playground{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body>
+    <!-- ====== NAVBAR ====== -->
+    <nav class="navbar">
+        <div class="container nav-container">
+<a href="{% url 'home' %}" class="nav-brand">AI Playground</a>
+            <div class="nav-links">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
+                    <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link btn-link">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-link">Login</a>
+                    <a href="{% url 'register' %}" class="nav-link">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+<!-- ====== PAGE CONTENT ====== -->
+    <main class="container main-content">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ====== EXTRA JAVASCRIPT (per-page) ====== -->
+    {% block extra_js %}{% endblock %}
+
+    <!-- ====== FOOTER ====== -->
+    <footer class="footer">
+        <div class="container">
+<p>AI Playground — Learn AI by Practicing, Coding, and Building.</p>
+        </div>
+    </footer>
+</body>
+</html>

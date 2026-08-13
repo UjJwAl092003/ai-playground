@@ -1,0 +1,92 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Project Import Result | Django site admin{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  <style>
+    .result-box { max-width: 720px; margin: 20px 0; }
+    .result-box .module { padding: 16px 20px; }
+    .result-box h2 { margin-top: 0; }
+    .result-list { list-style: none; padding: 0; }
+    .result-list li { padding: 6px 0; border-bottom: 1px solid #eee; }
+    .result-list strong { display: inline-block; min-width: 220px; }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; color: #fff;
+    }
+    .badge-success { background: #28a745; }
+    .badge-warn { background: #ffc107; }
+    .actions { margin-top: 18px; }
+  </style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='core' %}">Core</a>
+    &rsaquo; <a href="{% url 'admin:core_project_changelist' %}">Projects</a>
+    &rsaquo; {% translate "Import Result" %}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="result-box">
+    <div class="module">
+<h2>✅ Import completed</h2>
+      <ul class="result-list">
+        <li>
+          <strong>Project:</strong> {{ result.project_name }}
+        </li>
+        <li>
+          <strong>Slug:</strong> {{ result.project_slug }}
+        </li>
+        <li>
+          <strong>Project action:</strong>
+          {% if result.project_created %}
+            <span class="badge badge-success">Created</span>
+          {% else %}
+            <span class="badge badge-warn">Already existed — kept unchanged</span>
+          {% endif %}
+        </li>
+<li>
+          <strong>Questions imported:</strong>
+          <span class="badge badge-success">{{ result.imported_count }}</span>
+        </li>
+        <li>
+          <strong>Numbering mode:</strong>
+          {% if result.auto_number %}Auto-numbered{% else %}As provided in file{% endif %}
+        </li>
+        <li>
+          <strong>Question range:</strong>
+          {% if result.min_number %}
+            #{{ result.min_number }} – #{{ result.max_number }}
+          {% else %}
+            —
+          {% endif %}
+        </li>
+        <li>
+          <strong>Total questions for project:</strong>
+          {{ result.total_for_project }}
+        </li>
+        {% if result.skipped_conflicts %}
+          <li>
+            <strong>Skipped conflicts:</strong>
+            <span class="badge badge-warn">{{ result.skipped_conflicts }}</span>
+          </li>
+        {% endif %}
+      </ul>
+
+      <div class="actions">
+        <a href="{{ changelist_url }}" class="button">Back to Projects</a>
+        <a href="{% url 'admin:core_project_import_json' %}" class="button">
+          Import another file
+        </a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

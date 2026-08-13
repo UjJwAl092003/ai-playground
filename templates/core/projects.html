@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Projects — AI Playground{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Hands-on Projects</h1>
+    <p class="subtitle">Learn by building real Python &amp; Machine Learning projects through guided MCQs</p>
+</div>
+
+<div class="subject-grid">
+    {% for project in projects %}
+        <div class="subject-card">
+            <div class="card-body">
+                <h2>{{ project.title }}</h2>
+                {% if project.short_description %}
+                    <p class="project-description">{{ project.short_description }}</p>
+                {% endif %}
+                <p class="question-count">{{ project.questions.count }} question{{ project.questions.count|pluralize }}</p>
+                <a href="{% url 'project_detail' project.slug %}" class="btn btn-primary">
+                    {% if user.is_authenticated %}
+                        View Project
+                    {% else %}
+                        Start Project
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+    {% empty %}
+        <div class="empty-state">
+            <p>No projects are available yet. Please check back later.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

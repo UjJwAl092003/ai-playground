@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if review_mode %}Review Mistakes{% elif contentType == 'project' %}{{ project.title }}{% else %}Learn {{ subject.name }}{% endif %} — AI Playground{% endblock %}
+
+{% block content %}
+{% if review_mode %}
+    <div class="review-mode-banner">
+        <h1>Review Mode</h1>
+        <p class="subtitle">These are questions you previously answered incorrectly. Try them again and strengthen your understanding.</p>
+    </div>
+    <div class="learn-header">
+        <p class="subtitle">Question <span id="current-number">1</span> of <span id="total-questions">{{ mistake_count }}</span></p>
+    </div>
+{% else %}
+<div class="learn-header">
+        <h1>{% if contentType == 'project' %}{{ project.title }}{% else %}{{ subject.name }}{% endif %}</h1>
+        <p class="subtitle">Question <span id="current-number">{{ first_number }}</span> of <span id="total-questions">{{ total }}</span></p>
+    </div>
+{% endif %}
+
+{% if no_questions %}
+    <div class="empty-state">
+<p>No questions available yet.</p>
+        {% if contentType == 'project' %}
+            <a href="{% url 'project_detail' project.slug %}" class="btn btn-primary">Back to Project</a>
+        {% else %}
+            <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-primary">Back to Subject</a>
+        {% endif %}
+    </div>
+{% else %}
+    <div id="question-container" class="question-container">
+        <!-- Question content is loaded by JavaScript -->
+        <div class="loading-spinner">Loading question...</div>
+    </div>
+
+    <div id="explanation-container" class="explanation-container" style="display:none;">
+        <!-- Explanation content is shown after answering -->
+    </div>
+
+    <div class="navigation-area">
+        <button id="next-btn" class="btn btn-primary" style="display:none;">Next Question →</button>
+{% if review_mode %}
+            <a href="{% url 'review_mistakes' %}" class="btn btn-secondary">Back to Review</a>
+        {% elif contentType == 'project' %}
+            <a href="{% url 'project_detail' project.slug %}" class="btn btn-secondary">Back to Project</a>
+        {% else %}
+            <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-secondary">Back to Subject</a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Pass Django template variables to JavaScript
+window.LEARN_CONFIG = {
+        contentType: '{{ contentType|default:"subject" }}',
+        subjectSlug: '{{ subject.slug }}',
+        projectSlug: '{{ project.slug }}',
+        firstNumber: {{ first_number|default:1 }},
+        total: {% if review_mode %}{{ mistake_count }}{% else %}{{ total|default:0 }}{% endif %},
+        csrfToken: '{{ csrf_token }}',
+        isAuthenticated: {{ user.is_authenticated|lower }},
+{% if review_mode %}
+        reviewMode: true,
+        reviewSubjectSlug: '{{ review_subject_slug }}',
+        reviewProjectSlug: '{{ review_project_slug }}',
+        mistakes: {{ mistakes_json|safe }},
+        {% else %}
+        reviewMode: false,
+        isGuest: {{ is_guest|lower }},
+        guestFreeLimit: {{ guest_free_limit|default:5 }},
+        guestAttemptsUsed: {{ guest_attempts_used|default:0 }},
+        guestLimitReached: {{ guest_limit_reached|lower }},
+        learnUrl: '{% if contentType == "project" %}{% url "project_learn" project.slug %}{% else %}{% url "learn" subject.slug %}{% endif %}',
+        {% endif %}
+    };
+</script>
+<script src="{% static 'js/markdown.js' %}"></script>
+<script src="{% static 'js/learn.js' %}"></script>
+{% endblock %}
+

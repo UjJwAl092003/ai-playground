@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — AI Playground{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Your Dashboard</h1>
+    <p class="subtitle">Track your learning progress across all subjects</p>
+</div>
+
+<!-- ====== OVERALL STATS ====== -->
+<div class="overall-stats">
+    <h2>Overall Progress</h2>
+    <div class="stats-row">
+        <div class="stat-box">
+            <span class="stat-number">{{ total_attempted }}</span>
+            <span class="stat-label">Attempted</span>
+        </div>
+        <div class="stat-box stat-correct">
+            <span class="stat-number">{{ total_correct }}</span>
+            <span class="stat-label">Correct</span>
+        </div>
+        <div class="stat-box stat-wrong">
+            <span class="stat-number">{{ total_wrong }}</span>
+            <span class="stat-label">Wrong</span>
+        </div>
+        <div class="stat-box stat-accuracy">
+            <span class="stat-number">{{ accuracy }}%</span>
+            <span class="stat-label">Accuracy</span>
+        </div>
+    </div>
+</div>
+
+<!-- ====== PROJECT-WISE BREAKDOWN ====== -->
+<div class="subject-breakdown project-breakdown">
+    <h2>Project-wise Progress</h2>
+    {% if project_stats %}
+        <table class="progress-table">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Attempted</th>
+                    <th>Correct</th>
+                    <th>Wrong</th>
+                    <th>Accuracy</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in project_stats %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'project_detail' stat.project.slug %}">
+                                {{ stat.project.title }}
+                            </a>
+                        </td>
+                        <td>{{ stat.attempted }} / {{ stat.total }}</td>
+                        <td class="stat-correct">{{ stat.correct }}</td>
+                        <td class="stat-wrong">{{ stat.wrong }}</td>
+                        <td>{{ stat.accuracy }}%</td>
+                        <td>
+                            {% if stat.all_done %}
+                                <span class="badge badge-complete">✅ Completed</span>
+                            {% elif stat.attempted > 0 %}
+                                <span class="badge badge-progress">🔄 In Progress</span>
+                            {% else %}
+                                <span class="badge badge-new">🆕 Not Started</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state">No projects available yet.</p>
+    {% endif %}
+</div>
+
+<!-- ====== REVIEW MISTAKES ====== -->
+<div class="review-mistakes-panel">
+    <h2>Review Mistakes</h2>
+    {% if has_mistakes %}
+        <p class="review-mistakes-count">
+            <span class="stat-number">{{ mistake_count }}</span>
+            <span class="stat-label">Mistakes to Review</span>
+        </p>
+    {% else %}
+        <p class="review-mistakes-empty">🎉 You have no mistakes to review. Great job!</p>
+    {% endif %}
+    <div class="action-area review-dashboard-actions">
+        <a href="{% url 'review_mistakes' %}" class="btn btn-primary">Review Mistakes</a>
+        <a href="{% url 'home' %}" class="btn btn-secondary">Continue Learning</a>
+    </div>
+</div>
+
+
+<!-- ====== SUBJECT-WISE BREAKDOWN ====== -->
+<div class="subject-breakdown">
+    <h2>Subject-wise Progress</h2>
+    {% if subject_stats %}
+        <table class="progress-table">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Attempted</th>
+                    <th>Correct</th>
+                    <th>Wrong</th>
+                    <th>Accuracy</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in subject_stats %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'subject_detail' stat.subject.slug %}">
+                                {{ stat.subject.name }}
+                            </a>
+                        </td>
+                        <td>{{ stat.attempted }} / {{ stat.total }}</td>
+                        <td class="stat-correct">{{ stat.correct }}</td>
+                        <td class="stat-wrong">{{ stat.wrong }}</td>
+                        <td>{{ stat.accuracy }}%</td>
+                        <td>
+                            {% if stat.all_done %}
+                                <span class="badge badge-complete">✅ Completed</span>
+                            {% elif stat.attempted > 0 %}
+                                <span class="badge badge-progress">🔄 In Progress</span>
+                            {% else %}
+                                <span class="badge badge-new">🆕 Not Started</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state">No subjects available yet.</p>
+    {% endif %}
+</div>
+
+<div class="action-area">
+    <a href="{% url 'home' %}" class="btn btn-primary">Browse Subjects</a>
+</div>
+{% endblock %}

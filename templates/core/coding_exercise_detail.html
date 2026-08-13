@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exercise {{ exercise.exercise_number }}: {{ exercise.title }} — AI Playground{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Exercise {{ exercise.exercise_number }}: {{ exercise.title }}</h1>
+    <p class="subtitle">
+        {{ lesson.module }} — {{ lesson.topic }}
+        · Exercise {{ exercise_index }} of {{ exercise_total }}
+    </p>
+<div class="exercise-meta">
+        {% if exercise.difficulty %}
+            <span class="difficulty-badge diff-{{ exercise.difficulty|lower }}">{{ exercise.difficulty }}</span>
+        {% endif %}
+        <span class="exercise-time">⏱ ~{{ exercise.estimated_time }} min</span>
+    </div>
+</div>
+
+{% if lesson.subject %}
+    <p class="lesson-subject-link">
+        <a href="{% url 'coding_lesson_detail' lesson.lesson_slug %}">← All exercises in this lesson</a>
+    </p>
+{% endif %}
+
+{% if user.is_authenticated and is_completed %}
+    <p class="completion-badge">✅ You've completed this exercise.</p>
+{% endif %}
+
+<!-- ====== OBJECTIVE ====== -->
+{% if exercise.objective %}
+<div class="exercise-section">
+    <h2>🎯 Objective</h2>
+    <div class="project-markdown" data-markdown="{{ exercise.objective }}"></div>
+</div>
+{% endif %}
+
+<!-- ====== ML CONNECTION ====== -->
+{% if exercise.ml_connection %}
+<div class="exercise-section">
+    <h2>🤖 ML Connection</h2>
+    <div class="project-markdown" data-markdown="{{ exercise.ml_connection }}"></div>
+</div>
+{% endif %}
+
+<!-- ====== DATASET PREVIEW ====== -->
+{% if exercise.dataset_name or exercise.dataset_description or exercise.dataset_preview %}
+<div class="exercise-section">
+    <h2>📊 Dataset{% if exercise.dataset_name %}: {{ exercise.dataset_name }}{% endif %}</h2>
+    {% if exercise.dataset_description %}
+        <div class="project-markdown" data-markdown="{{ exercise.dataset_description }}"></div>
+    {% endif %}
+    {% if exercise.dataset_preview %}
+        <div class="dataset-preview" data-dataset='{{ exercise.dataset_preview_json }}'></div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- ====== PROBLEM STATEMENT ====== -->
+<div class="exercise-section">
+    <h2>🛠 Problem Statement</h2>
+    <div class="project-markdown" data-markdown="{{ exercise.problem_statement }}"></div>
+</div>
+
+<!-- ====== STARTER CODE + CODE EDITOR ====== -->
+{% if exercise.starter_code %}
+<div class="exercise-section">
+    <h2>🚀 Starter Code</h2>
+    <div class="project-markdown" data-markdown="{{ exercise.starter_code }}"></div>
+</div>
+{% endif %}
+
+<div class="exercise-section">
+    <h2>💻 Your Code</h2>
+    <textarea id="code-editor" class="code-editor" rows="12" spellcheck="false"
+        placeholder="# Write your Python solution here...">{{ exercise.starter_code_plain }}</textarea>
+    <p class="editor-hint">💡 This is a practice area. Write your solution here to think it through — it is not run on the server.</p>
+</div>
+
+<!-- ====== HINTS ====== -->
+{% if exercise.hints %}
+<div class="exercise-section">
+    <h2>💡 Hints</h2>
+    <button type="button" class="btn btn-secondary" id="reveal-hints-btn">Show Hints</button>
+    <div class="hints-list" id="hints-list" style="display:none;">
+        {% for hint in exercise.hints %}
+            <div class="hint-item">Hint {{ forloop.counter }}: {{ hint }}</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ====== SHOW SOLUTION ====== -->
+{% if exercise.expected_solution %}
+<div class="exercise-section">
+    <h2>🔑 Show Solution</h2>
+    <button type="button" class="btn btn-secondary" id="reveal-solution-btn">Show Solution</button>
+    <div class="solution-block" id="solution-block" style="display:none;">
+        <div class="project-markdown" data-markdown="{{ exercise.expected_solution }}"></div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ====== EXPECTED OUTPUT ====== -->
+{% if exercise.expected_output %}
+<div class="exercise-section">
+    <h2>📤 Expected Output</h2>
+    <div class="project-markdown" data-markdown="{{ exercise.expected_output }}"></div>
+</div>
+{% endif %}
+
+<!-- ====== EXPLANATION ====== -->
+<div class="exercise-section">
+    <h2>🧠 Explanation</h2>
+    <div class="project-markdown" data-markdown="{{ exercise.explanation }}"></div>
+</div>
+
+<!-- ====== COMMON MISTAKES ====== -->
+{% if exercise.common_mistakes %}
+<div class="exercise-section">
+    <h2>⚠️ Common Mistakes</h2>
+    <ul class="common-mistakes-list">
+        {% for mistake in exercise.common_mistakes %}
+            <li>{{ mistake }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- ====== CONCEPTS COVERED ====== -->
+{% if exercise.concepts_covered %}
+<div class="exercise-section">
+    <h2>🏷 Concepts Covered</h2>
+    <div class="concepts-list">
+        {% for concept in exercise.concepts_covered %}
+            <span class="concept-tag">{{ concept }}</span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ====== NAVIGATION ====== -->
+<div class="navigation-area exercise-navigation">
+    {% if prev_number %}
+        <a href="{% url 'coding_exercise_detail' lesson.lesson_slug prev_number %}"
+           class="btn btn-secondary">← Previous</a>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+        <form method="post" action="{% url 'coding_mark_complete' exercise.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">
+                {% if is_completed %}✅ Completed — Next{% else %}Mark Complete →{% endif %}
+            </button>
+        </form>
+    {% else %}
+        {% if next_number %}
+            <a href="{% url 'coding_exercise_detail' lesson.lesson_slug next_number %}"
+               class="btn btn-primary">Next Exercise →</a>
+        {% else %}
+            <a href="{% url 'coding_lesson_detail' lesson.lesson_slug %}"
+               class="btn btn-primary">Back to Lesson</a>
+        {% endif %}
+    {% endif %}
+
+    {% if next_number %}
+        <a href="{% url 'coding_exercise_detail' lesson.lesson_slug next_number %}"
+           class="btn btn-secondary">Next →</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/markdown.js' %}"></script>
+<script src="{% static 'js/project_markdown.js' %}"></script>
+<script src="{% static 'js/coding.js' %}"></script>
+{% endblock %}

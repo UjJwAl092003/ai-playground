@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ subject.name }} — AI Playground{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ subject.name }}</h1>
+    <p class="subtitle">{{ question_count }} question{{ question_count|pluralize }} available</p>
+</div>
+
+{% if user.is_authenticated and question_count > 0 %}
+    <div class="progress-summary">
+        <h3>Your Progress</h3>
+        <div class="stats-row">
+            <div class="stat-box">
+                <span class="stat-number">{{ completed_count }}</span>
+                <span class="stat-label">Completed</span>
+            </div>
+            <div class="stat-box stat-correct">
+                <span class="stat-number">{{ correct_count }}</span>
+                <span class="stat-label">Correct</span>
+            </div>
+            <div class="stat-box stat-wrong">
+                <span class="stat-number">{{ wrong_count }}</span>
+                <span class="stat-label">Wrong</span>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<div class="action-area">
+    {% if question_count == 0 %}
+        <p class="empty-state">No questions have been added to this subject yet.</p>
+    {% else %}
+        {% if user.is_authenticated %}
+            {% if all_completed %}
+                <p class="completion-badge">✅ All questions completed! You can review them again.</p>
+                <a href="{% url 'learn' subject.slug %}" class="btn btn-primary btn-lg">Review Again</a>
+            {% else %}
+                <a href="{% url 'learn' subject.slug %}" class="btn btn-primary btn-lg">
+                    {% if completed_count > 0 %}
+                        Continue Learning (Question {{ continue_number }})
+                    {% else %}
+                        Start Learning
+                    {% endif %}
+                </a>
+            {% endif %}
+        {% else %}
+            <p class="login-prompt">Log in to track your progress!</p>
+            <a href="{% url 'learn' subject.slug %}" class="btn btn-primary btn-lg">Start Learning</a>
+        {% endif %}
+    {% endif %}
+</div>
+
+{% if coding_lessons %}
+    <div class="coding-lessons-section">
+        <h2>🧑‍💻 Coding Exercises</h2>
+        <p class="subtitle">Hands-on practice to reinforce this subject's concepts.</p>
+        <div class="coding-exercise-list">
+            {% for lesson in coding_lessons %}
+                <div class="coding-exercise-card">
+                    <div class="exercise-card-header">
+                        <span class="exercise-number">{{ lesson.module }}</span>
+                    </div>
+                    <h2>{{ lesson.topic }}</h2>
+                    <a href="{% url 'coding_lesson_detail' lesson.lesson_slug %}"
+                       class="btn btn-primary">Open Lesson</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

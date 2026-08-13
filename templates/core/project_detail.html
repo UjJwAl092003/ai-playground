@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ project.title }} — AI Playground{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ project.title }}</h1>
+    <p class="subtitle">{{ question_count }} question{{ question_count|pluralize }} available</p>
+</div>
+
+{% if project.overview %}
+    <div class="project-overview project-markdown" data-markdown="{{ project.overview }}"></div>
+{% endif %}
+
+{% if user.is_authenticated and question_count > 0 %}
+    <div class="progress-summary">
+        <h3>Your Progress</h3>
+        <div class="stats-row">
+            <div class="stat-box">
+                <span class="stat-number">{{ completed_count }}</span>
+                <span class="stat-label">Completed</span>
+            </div>
+            <div class="stat-box stat-correct">
+                <span class="stat-number">{{ correct_count }}</span>
+                <span class="stat-label">Correct</span>
+            </div>
+            <div class="stat-box stat-wrong">
+                <span class="stat-number">{{ wrong_count }}</span>
+                <span class="stat-label">Wrong</span>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<div class="action-area">
+    {% if question_count == 0 %}
+        <p class="empty-state">No questions have been added to this project yet.</p>
+    {% else %}
+        {% if user.is_authenticated %}
+            {% if all_completed %}
+                <p class="completion-badge">✅ All questions completed!</p>
+                <a href="{% url 'project_learn' project.slug %}" class="btn btn-primary btn-lg">Review Again</a>
+                <a href="{% url 'project_complete' project.slug %}" class="btn btn-secondary btn-lg">View Complete Project</a>
+            {% else %}
+                <a href="{% url 'project_learn' project.slug %}" class="btn btn-primary btn-lg">
+                    {% if completed_count > 0 %}
+                        Continue Learning (Question {{ continue_number }})
+                    {% else %}
+                        Start Learning
+                    {% endif %}
+                </a>
+            {% endif %}
+{% else %}
+            <p class="login-prompt">Log in to track your progress in this project!</p>
+            <a href="{% url 'project_learn' project.slug %}" class="btn btn-primary btn-lg">Start Learning</a>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/markdown.js' %}"></script>
+<script src="{% static 'js/project_markdown.js' %}"></script>
+{% endblock %}
