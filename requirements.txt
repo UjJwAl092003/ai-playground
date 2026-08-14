@@ -3,4 +3,7 @@
 #   venv\Scripts\python -m pip install -r requirements.txt
 Django==6.0.7
 Pillow==12.3.0
+gunicorn
+whitenoise
+dj-database-url
 
