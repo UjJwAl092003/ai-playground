@@ -25,8 +25,11 @@ SECRET_KEY = 'django-insecure-0388b#bq8@+erx0h!%yhtjkai9ch5c0#+%+$q@rfil2_32z=ya
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "ai-playground-jnc0.onrender.com",
+]
 
 # Application definition
 
