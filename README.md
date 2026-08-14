@@ -151,43 +151,6 @@ Run Django's system checks:
 python manage.py check
 ```
 
-## Screenshots
-
-Screenshots are kept outside the application code so the repository stays easy to navigate.
-
-Suggested screenshots:
-
-1. `docs/screenshots/home.png` — landing page
-2. `docs/screenshots/mcq.png` — MCQ with explanation and Python code
-3. `docs/screenshots/coding-exercise.png` — coding exercise page
-4. `docs/screenshots/project.png` — project page
-5. `docs/screenshots/dashboard.png` — progress dashboard
-6. `docs/screenshots/admin-import.png` — JSON import preview in Django Admin
-
-Example Markdown for the README:
-
-```markdown
-## Screenshots
-
-### Home
-![AI Playground home page](docs/screenshots/home.png)
-
-### MCQ practice
-![MCQ practice page](docs/screenshots/mcq.png)
-
-### Coding exercise
-![Coding exercise page](docs/screenshots/coding-exercise.png)
-
-### Project learning flow
-![Project page](docs/screenshots/project.png)
-
-### Progress dashboard
-![Progress dashboard](docs/screenshots/dashboard.png)
-
-### Admin content import
-![Admin import preview](docs/screenshots/admin-import.png)
-```
-
 ## Design notes
 
 The application is intentionally built around database-backed content rather than hard-coded question sets. This makes it possible to keep adding new lessons, exercises, and projects without changing the learning interface.
